@@ -1,0 +1,27 @@
+name: Update Yahoo Finance Data
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch Yahoo Finance data
+        run: |
+          mkdir -p data
+          curl -sL "https://query1.finance.yahoo.com/v8/finance/chart/USDKRW=X?range=5d&interval=15m" -o data/usdkrw.json
+          curl -sL "https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?range=5d&interval=15m" -o data/us10y.json
+          curl -sL "https://query1.finance.yahoo.com/v8/finance/chart/CL=F?range=5d&interval=15m" -o data/wti.json
+
+      - name: Commit data
+        run: |
+          git config user.name "yahoo-bot"
+          git config user.email "yahoo-bot@users.noreply.github.com"
+          git add data/*.json
+          git commit -m "Update market data" || exit 0
+          git push
