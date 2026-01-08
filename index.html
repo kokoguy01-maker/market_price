@@ -26,7 +26,6 @@
       margin-bottom: 14px;
     }
 
-    /* 요약 박스 */
     .summary {
       display: flex;
       flex-direction: column;
@@ -52,80 +51,132 @@
       margin-top: 6px;
       color: #888;
     }
-
-    /* 차트 영역 */
-    .chart {
-      margin-top: 18px;
-      padding-top: 10px;
-      border-top: 1px solid #eee;
+    .error {
+      color: #c0392b;
+      font-size: 13px;
     }
-    .chart h2 {
-      font-size: 15px;
-      margin-bottom: 6px;
-    }
-    canvas {
-      width: 100% !important;
-      height: 280px !important;
+    .loading {
+      color: #999;
+      font-size: 14px;
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <h1>시장 현황 요약</h1>
-    <div class="muted">
-      데이터: Yahoo Finance(야후 파이낸스) | 자동 갱신: GitHub Actions
-    </div>
-
-    <div class="summary">
-      <div class="box">
-        <div class="k">USD/KRW 환율</div>
-        <div class="v" id="v_fx">-</div>
-        <div class="ts" id="t_fx"></div>
-      </div>
-
-      <div class="box">
-        <div class="k">미국채 10년물 수익률 (10Y)</div>
-        <div class="v" id="v_10y">-</div>
-        <div class="ts" id="t_10y"></div>
-      </div>
-
-      <div class="box">
-        <div class="k">WTI 유가</div>
-        <div class="v" id="v_wti">-</div>
-        <div class="ts" id="t_wti"></div>
-      </div>
-    </div>
+<div class="wrap">
+  <h1>시장 현황 요약</h1>
+  <div class="muted">
+    데이터: Yahoo Finance | 자동 갱신: GitHub Actions
   </div>
 
+  <div class="summary">
+
+    <div class="box">
+      <div class="k">USD/KRW 환율</div>
+      <div class="v loading" id="v_fx">불러오는 중…</div>
+      <div class="ts" id="t_fx"></div>
+    </div>
+
+    <div class="box">
+      <div class="k">미국채 10년물 수익률 (10Y)</div>
+      <div class="v loading" id="v_10y">불러오는 중…</div>
+      <div class="ts" id="t_10y"></div>
+    </div>
+
+    <div class="box">
+      <div class="k">WTI 유가</div>
+      <div class="v loading" id="v_wti">불러오는 중…</div>
+      <div class="ts" id="t_wti"></div>
+    </div>
+
+  </div>
+</div>
+
 <script>
-async function loadData(url, valueId, timeId, suffix = "") {
-  try {
-    const res = await fetch(url + "?t=" + Date.now()); // 캐시 방지
-    const json = await res.json();
+document.addEventListener("DOMContentLoaded", () => {
 
-    const meta = json?.chart?.result?.[0]?.meta;
-    if (!meta) throw new Error("meta 없음");
-
-    const value = meta.regularMarketPrice;
-    const ts = new Date(meta.regularMarketTime * 1000);
-
-    document.getElementById(valueId).innerText =
-      value.toLocaleString() + suffix;
-
-    document.getElementById(timeId).innerText =
-      "기준시각: " + ts.toLocaleString("ko-KR");
-
-  } catch (e) {
-    document.getElementById(valueId).innerText = "데이터 오류";
-    console.error(url, e);
+  async function loadJSON(url) {
+    const res = await fetch(url + '?t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
   }
-}
 
-/* 데이터 로딩 */
-loadData("./data/usdkrw.json", "v_fx", "t_fx", " 원");
-loadData("./data/us10y.json",  "v_10y", "t_10y", " %");
-loadData("./data/wti.json",    "v_wti", "t_wti", " USD");
+  function setError(valueEl, timeEl, msg) {
+    valueEl.innerText = msg;
+    valueEl.className = 'v error';
+    timeEl.innerText = '';
+  }
+
+  function setValue(valueEl, timeEl, text, unixTime) {
+    valueEl.innerText = text;
+    valueEl.className = 'v';
+    if (unixTime) {
+      const dt = new Date(unixTime * 1000);
+      timeEl.innerText = '업데이트: ' + dt.toLocaleString();
+    }
+  }
+
+  // USD/KRW
+  (async () => {
+    const v = document.getElementById('v_fx');
+    const t = document.getElementById('t_fx');
+    try {
+      const j = await loadJSON('./data/usdkrw.json');
+      const meta = j?.chart?.result?.[0]?.meta;
+      if (!meta?.regularMarketPrice) throw new Error('No price');
+      setValue(
+        v,
+        t,
+        meta.regularMarketPrice.toLocaleString() + ' 원',
+        meta.regularMarketTime
+      );
+    } catch (e) {
+      console.error('USD/KRW', e);
+      setError(v, t, '데이터 없음');
+    }
+  })();
+
+  // 미국채 10Y
+  (async () => {
+    const v = document.getElementById('v_10y');
+    const t = document.getElementById('t_10y');
+    try {
+      const j = await loadJSON('./data/us10y.json');
+      const meta = j?.chart?.result?.[0]?.meta;
+      if (!meta?.regularMarketPrice) throw new Error('No price');
+      setValue(
+        v,
+        t,
+        meta.regularMarketPrice.toFixed(2) + ' %',
+        meta.regularMarketTime
+      );
+    } catch (e) {
+      console.error('US10Y', e);
+      setError(v, t, '데이터 없음');
+    }
+  })();
+
+  // WTI
+  (async () => {
+    const v = document.getElementById('v_wti');
+    const t = document.getElementById('t_wti');
+    try {
+      const j = await loadJSON('./data/wti.json');
+      const meta = j?.chart?.result?.[0]?.meta;
+      if (!meta?.regularMarketPrice) throw new Error('No price');
+      setValue(
+        v,
+        t,
+        '$ ' + meta.regularMarketPrice.toFixed(2),
+        meta.regularMarketTime
+      );
+    } catch (e) {
+      console.error('WTI', e);
+      setError(v, t, '데이터 없음');
+    }
+  })();
+
+});
 </script>
 
 </body>
