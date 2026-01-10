@@ -2,151 +2,134 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>시장 현황 요약</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
-      background: #ffffff;
+      background: #fff;
     }
     .wrap {
       max-width: 900px;
-      margin: 0 auto;
+      margin: auto;
       padding: 16px;
     }
-    h1 {
-      font-size: 20px;
-      margin-bottom: 6px;
-    }
-    .muted {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 14px;
-    }
+    h1 { font-size: 20px; }
+    .muted { font-size: 12px; color: #666; margin-bottom: 12px; }
+
     .box {
       border: 1px solid #e5e5e5;
       border-radius: 12px;
       padding: 14px;
       margin-bottom: 14px;
     }
-    .k {
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 6px;
-    }
-    .v {
-      font-size: 22px;
-      font-weight: 700;
-    }
-    .ts {
-      font-size: 11px;
-      margin-top: 4px;
-      color: #888;
-    }
-    .live {
-      font-size: 11px;
-      color: #d63031;
-      margin-left: 6px;
-    }
+    .k { font-size: 13px; color: #666; }
+    .v { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    canvas { margin-top: 10px; height: 220px !important; }
   </style>
 </head>
 
 <body>
 <div class="wrap">
   <h1>시장 현황 요약</h1>
-  <div class="muted">
-    환율·유가: 실시간 | 미국채 10Y: 최근 기준
+  <div class="muted">환율·유가: 준실시간 | 미국채 10Y: 최근 기준</div>
+
+  <div class="box">
+    <div class="k">USD/KRW 환율 ● LIVE</div>
+    <div class="v" id="fx_val">-</div>
+    <canvas id="fx_chart"></canvas>
   </div>
 
   <div class="box">
-    <div class="k">USD/KRW 환율 <span class="live">● LIVE</span></div>
-    <div class="v" id="v_fx">-</div>
-    <div class="ts" id="t_fx"></div>
+    <div class="k">미국채 10년물 수익률</div>
+    <div class="v" id="us10y_val">-</div>
   </div>
 
   <div class="box">
-    <div class="k">미국채 10년물 수익률 (10Y)</div>
-    <div class="v" id="v_10y">-</div>
-    <div class="ts" id="t_10y"></div>
-  </div>
-
-  <div class="box">
-    <div class="k">WTI 유가 <span class="live">● LIVE</span></div>
-    <div class="v" id="v_wti">-</div>
-    <div class="ts" id="t_wti"></div>
+    <div class="k">WTI 유가 ● LIVE</div>
+    <div class="v" id="wti_val">-</div>
+    <canvas id="wti_chart"></canvas>
   </div>
 </div>
 
 <script>
-/* ---------- 공통 유틸 ---------- */
-function nowText() {
-  return new Date().toLocaleTimeString();
+async function loadJSON(url) {
+  const res = await fetch(url + '?t=' + Date.now());
+  return res.json();
 }
 
-/* ---------- 실시간 환율 (5초) ---------- */
-async function updateFX() {
-  try {
-    const res = await fetch(
-      'https://api.exchangerate.host/latest?base=USD&symbols=KRW'
+let fxChart, wtiChart;
+
+function drawChart(ctx, labels, data) {
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: '#2563eb',
+        tension: 0.25,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      animation: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { display: false }, y: { display: true } }
+    }
+  });
+}
+
+async function refreshData() {
+  const fx = await loadJSON('./data/usdkrw.json');
+  const wti = await loadJSON('./data/wti.json');
+  const us10y = await loadJSON('./data/us10y.json');
+
+  const fxMeta = fx.chart.result[0].meta;
+  const wtiMeta = wti.chart.result[0].meta;
+
+  document.getElementById('fx_val').innerText =
+    fxMeta.regularMarketPrice.toLocaleString() + ' 원';
+
+  document.getElementById('wti_val').innerText =
+    '$ ' + wtiMeta.regularMarketPrice.toFixed(2);
+
+  document.getElementById('us10y_val').innerText =
+    us10y.chart.result[0].meta.regularMarketPrice.toFixed(2) + ' %';
+
+  const fxPrices = fx.chart.result[0].indicators.quote[0].close.slice(-60);
+  const wtiPrices = wti.chart.result[0].indicators.quote[0].close.slice(-60);
+
+  if (!fxChart) {
+    fxChart = drawChart(
+      document.getElementById('fx_chart'),
+      fxPrices.map((_, i) => i),
+      fxPrices
     );
-    const data = await res.json();
-    const price = data?.rates?.KRW;
-    if (!price) return;
-
-    document.getElementById('v_fx').innerText =
-      price.toLocaleString() + ' 원';
-    document.getElementById('t_fx').innerText =
-      '업데이트: ' + nowText();
-  } catch (e) {
-    console.error('FX realtime error', e);
+  } else {
+    fxChart.data.datasets[0].data = fxPrices;
+    fxChart.update();
   }
-}
-updateFX();
-setInterval(updateFX, 5000);
 
-/* ---------- 실시간 유가 (5초) ---------- */
-async function updateWTI() {
-  try {
-    const res = await fetch(
-      'https://api.allorigins.win/raw?url=https://stooq.com/q/l/?s=cl.f&f=sd2t2ohlcv&h&e=json'
+  if (!wtiChart) {
+    wtiChart = drawChart(
+      document.getElementById('wti_chart'),
+      wtiPrices.map((_, i) => i),
+      wtiPrices
     );
-    const data = await res.json();
-    const price = parseFloat(data?.data?.[0]?.[3]);
-    if (!price) return;
-
-    document.getElementById('v_wti').innerText =
-      '$ ' + price.toFixed(2);
-    document.getElementById('t_wti').innerText =
-      '업데이트: ' + nowText();
-  } catch (e) {
-    console.error('WTI realtime error', e);
+  } else {
+    wtiChart.data.datasets[0].data = wtiPrices;
+    wtiChart.update();
   }
 }
-updateWTI();
-setInterval(updateWTI, 5000);
 
-/* ---------- 미국채 10Y (안정 경로) ---------- */
-async function loadUS10Y() {
-  try {
-    const res = await fetch('./data/us10y.json?t=' + Date.now());
-    const json = await res.json();
-    const meta = json?.chart?.result?.[0]?.meta;
-    if (!meta?.regularMarketPrice) return;
-
-    document.getElementById('v_10y').innerText =
-      meta.regularMarketPrice.toFixed(2) + ' %';
-    document.getElementById('t_10y').innerText =
-      '기준 시각: ' + new Date(
-        meta.regularMarketTime * 1000
-      ).toLocaleString();
-  } catch (e) {
-    console.error('US10Y load error', e);
-  }
-}
-loadUS10Y();
+refreshData();
+setInterval(refreshData, 5000); // 5초 UI 갱신
 </script>
-
 </body>
 </html>
