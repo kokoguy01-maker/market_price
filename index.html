@@ -1,122 +1,120 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>시장 현황 요약</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>시장 현황 요약</title>
 
-  <!-- 🔴 TradingView 핵심 로더 (필수) -->
-  <script src="https://s3.tradingview.com/tv.js"></script>
+<!-- TradingView -->
+<script src="https://s3.tradingview.com/tv.js"></script>
 
-  <!-- Chart.js (미국채용) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+  background: linear-gradient(180deg, #0b1220, #060a14);
+  color: #fff;
+}
 
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: linear-gradient(180deg, #0b1324, #020617);
-      color: #e5e7eb;
-    }
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 20px;
+}
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 24px;
-    }
+h1 {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
 
-    h1 {
-      margin-bottom: 20px;
-    }
+.muted {
+  font-size: 12px;
+  color: #9aa4b2;
+  margin-bottom: 20px;
+}
 
-    /* 요약 카드 */
-    .summary-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-      margin-bottom: 32px;
-    }
+/* ===== 카드 ===== */
+.card {
+  background: linear-gradient(180deg, #1a2233, #141b29);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
 
-    .summary-card {
-      background: linear-gradient(180deg, #1c2636, #111827);
-      border-radius: 16px;
-      padding: 16px;
-    }
+/* ===== TradingView 요약 ===== */
+.tv-summary {
+  height: 120px;
+}
 
-    .summary-title {
-      font-size: 14px;
-      opacity: 0.8;
-      margin-bottom: 8px;
-    }
+/* ===== 차트 ===== */
+.tv-chart {
+  width: 100%;
+  min-height: 360px;
+}
 
-    /* 차트 */
-    .chart-box {
-      background: linear-gradient(180deg, #1c2636, #111827);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 28px;
-    }
+/* ===== 미국채 ===== */
+.bond-value {
+  font-size: 28px;
+  font-weight: 700;
+}
 
-    .chart-title {
-      font-size: 15px;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-  </style>
+.bond-ts {
+  font-size: 12px;
+  color: #9aa4b2;
+  margin-top: 6px;
+}
+</style>
 </head>
 
 <body>
-<div class="container">
+<div class="wrap">
 
-  <h1>시장 현황 요약</h1>
+<h1>시장 현황 요약</h1>
+<div class="muted">
+환율·유가: 실시간(TradingView) / 미국채 10Y: 30분 기준(Yahoo Finance)
+</div>
 
-  <!-- ================= 요약 카드 ================= -->
-  <div class="summary-grid">
+<!-- ===== 요약 카드 ===== -->
 
-    <!-- USD/KRW -->
-    <div class="summary-card">
-      <div class="summary-title">USD/KRW 환율</div>
-      <div id="usdkrw-summary"></div>
-    </div>
+<div class="card">
+  <div id="usdkrw-summary" class="tv-summary"></div>
+</div>
 
-    <!-- WTI -->
-    <div class="summary-card">
-      <div class="summary-title">WTI 유가</div>
-      <div id="wti-summary"></div>
-    </div>
+<div class="card">
+  <div id="wti-summary" class="tv-summary"></div>
+</div>
 
-    <!-- 미국채 -->
-    <div class="summary-card">
-      <div class="summary-title">미국채 10년물 수익률</div>
-      <div style="font-size:28px;font-weight:600;">4.82%</div>
-      <div style="font-size:12px;opacity:0.7;">30분 기준 (Yahoo Finance)</div>
-    </div>
+<div class="card">
+  <div>미국채 10년물 수익률</div>
+  <div class="bond-value" id="bond10y">-</div>
+  <div class="bond-ts" id="bond-ts"></div>
+</div>
 
-  </div>
+<!-- ===== 차트 ===== -->
 
-  <!-- ================= 차트 ================= -->
+<div class="card">
+  <div>USD/KRW 환율 차트 (REAL-TIME)</div>
+  <div id="usdkrw-chart" class="tv-chart"></div>
+</div>
 
-  <!-- USD/KRW 차트 -->
-  <div class="chart-box">
-    <div class="chart-title">USD/KRW 환율 차트 (REAL-TIME)</div>
-    <div id="usdkrw-chart" style="height:360px;"></div>
-  </div>
+<div class="card">
+  <div>WTI 유가 차트 (REAL-TIME)</div>
+  <div id="wti-chart" class="tv-chart"></div>
+</div>
 
-  <!-- WTI 차트 -->
-  <div class="chart-box">
-    <div class="chart-title">WTI 유가 차트 (REAL-TIME)</div>
-    <div id="wti-chart" style="height:360px;"></div>
-  </div>
-
-  <!-- 미국채 차트 -->
-  <div class="chart-box">
-    <div class="chart-title">미국채 10년물 수익률 (30분 기준)</div>
-    <canvas id="us10yChart" height="360"></canvas>
-  </div>
+<div class="card">
+  <div>미국채 10년물 (30분 기준)</div>
+  <canvas id="bondChart" height="360"></canvas>
+</div>
 
 </div>
 
+<!-- ===== 스크립트 ===== -->
+
 <script>
-  /* ================= 요약 카드 ================= */
+window.onload = function () {
+
+  /* ========= TradingView 요약 ========= */
 
   new TradingView.MiniSymbolWidget({
     symbol: "FX_IDC:USDKRW",
@@ -140,49 +138,69 @@
     noTimeScale: true
   }, "wti-summary");
 
-  /* ================= 차트 ================= */
+  /* ========= TradingView 차트 ========= */
 
   new TradingView.widget({
-    autosize: true,
     symbol: "FX_IDC:USDKRW",
     interval: "5",
     timezone: "Asia/Seoul",
     theme: "dark",
-    style: "1",
+    style: "3",
     locale: "kr",
+    autosize: true,
     container_id: "usdkrw-chart"
   });
 
   new TradingView.widget({
-    autosize: true,
     symbol: "TVC:USOIL",
     interval: "5",
     timezone: "Asia/Seoul",
     theme: "dark",
-    style: "1",
+    style: "3",
     locale: "kr",
+    autosize: true,
     container_id: "wti-chart"
   });
 
-  /* ================= 미국채 (예시 데이터) ================= */
-  const ctx = document.getElementById('us10yChart');
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ["01:00","01:30","02:00","02:30","03:00"],
-      datasets: [{
-        label: "US 10Y",
-        data: [4.87,4.85,4.88,4.83,4.82],
-        borderColor: "#9bbcff",
-        tension: 0.35
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { x: { display: false } }
-    }
-  });
+  /* ========= 미국채 10Y (Yahoo Finance JSON) ========= */
+
+  fetch("./data/us10y.json?t=" + Date.now())
+    .then(r => r.json())
+    .then(j => {
+      const meta = j.chart.result[0].meta;
+      const ts = j.chart.result[0].timestamp;
+      const price = j.chart.result[0].indicators.quote[0].close;
+
+      document.getElementById("bond10y").innerText =
+        meta.regularMarketPrice.toFixed(2) + " %";
+
+      document.getElementById("bond-ts").innerText =
+        "기준시각: " + new Date(meta.regularMarketTime * 1000).toLocaleString();
+
+      const ctx = document.getElementById("bondChart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: ts.map(t => new Date(t * 1000).toLocaleTimeString()),
+          datasets: [{
+            data: price,
+            borderColor: "#8aa4ff",
+            borderWidth: 2,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { x: { display: false } }
+        }
+      });
+    });
+
+};
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </body>
 </html>
