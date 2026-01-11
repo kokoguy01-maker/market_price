@@ -10,8 +10,8 @@
 
   <style>
     :root{
-      --chartH: 360px;   /* 큰 차트(환율/유가/미국채) 통일 */
-      --miniH: 140px;    /* 요약 카드 높이(환율/유가/미국채) 통일 */
+      --chartH: 360px;   /* ✅ 세 차트 “차트 박스” 높이 완전 통일 */
+      --miniH: 140px;    /* 요약 카드 높이(환율/유가/미국채) */
       --linePos: #00c2a8;
       --lineNeg: #ff5b5b;
       --muted: #9aa4b2;
@@ -72,14 +72,25 @@
       font-weight: 600;
     }
 
-    /* TradingView 요약 위젯 높이 통일 */
+    /* ✅ 요약 위젯 높이 */
     .tv-mini { height: var(--miniH); }
-    .tv-chart { height: var(--chartH); }
 
-    /* 큰 차트(미국채) */
+    /* ✅ 세 차트 “차트 박스”를 동일 규격으로 강제 */
+    .chart-box {
+      height: var(--chartH);
+      border-radius: 12px;   /* 카드 내부에서도 모서리 통일감 */
+      overflow: hidden;       /* TV iframe / canvas가 밖으로 안나가게 */
+    }
+
+    /* TradingView 차트 컨테이너는 chart-box를 꽉 채움 */
+    .tv-chart {
+      height: 100%;
+    }
+
+    /* 미국채 캔버스도 chart-box를 꽉 채움 */
     #bondChart {
       width: 100% !important;
-      height: var(--chartH) !important;
+      height: 100% !important;
       display: block;
     }
 
@@ -122,7 +133,6 @@
       margin-top: -2px;
     }
 
-    /* 미국채 요약 미니차트 */
     #bondMiniChart {
       width: 100% !important;
       height: 70px !important;
@@ -197,7 +207,7 @@
     </div>
   </div>
 
-  <!-- ✅ 미국채 요약 (WTI mini와 동일한 “느낌”으로: 큰 값 + 변화 + 미니 선그래프) -->
+  <!-- 미국채 요약 (TV mini 스타일) -->
   <div class="card">
     <div class="card-title">
       미국채 10년물 수익률 (10Y) <span class="tag">30분 기준</span>
@@ -217,70 +227,77 @@
   </div>
 
   <!-- =========================
-       B) 큰 차트 (길이/높이 통일)
+       B) 차트 (세 개 모두 “chart-box”로 높이 통일)
        ========================= -->
 
   <!-- 환율 차트 -->
   <div class="card">
     <div class="card-title">USD/KRW 환율 차트 (REAL-TIME)</div>
-    <div class="tradingview-widget-container tv-chart">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript"
-              src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
-              async>
-      {
-        "symbol": "FX_IDC:USDKRW",
-        "interval": "5",
-        "timezone": "Asia/Seoul",
-        "theme": "dark",
-        "style": "3",
-        "locale": "kr",
-        "hide_top_toolbar": false,
-        "hide_legend": false,
-        "allow_symbol_change": false,
-        "save_image": false,
-        "details": false,
-        "calendar": false,
-        "support_host": "https://www.tradingview.com",
-        "autosize": true
-      }
-      </script>
+    <div class="chart-box">
+      <div class="tradingview-widget-container tv-chart">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript"
+                src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+                async>
+        {
+          "symbol": "FX_IDC:USDKRW",
+          "interval": "5",
+          "timezone": "Asia/Seoul",
+          "theme": "dark",
+          "style": "3",
+          "locale": "kr",
+          "hide_top_toolbar": false,
+          "hide_legend": false,
+          "allow_symbol_change": false,
+          "save_image": false,
+          "details": false,
+          "calendar": false,
+          "support_host": "https://www.tradingview.com",
+          "autosize": true
+        }
+        </script>
+      </div>
     </div>
   </div>
 
   <!-- 유가 차트 -->
   <div class="card">
     <div class="card-title">WTI 유가 차트 (REAL-TIME)</div>
-    <div class="tradingview-widget-container tv-chart">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript"
-              src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
-              async>
-      {
-        "symbol": "TVC:USOIL",
-        "interval": "5",
-        "timezone": "Asia/Seoul",
-        "theme": "dark",
-        "style": "3",
-        "locale": "kr",
-        "hide_top_toolbar": false,
-        "hide_legend": false,
-        "allow_symbol_change": false,
-        "save_image": false,
-        "details": false,
-        "calendar": false,
-        "support_host": "https://www.tradingview.com",
-        "autosize": true
-      }
-      </script>
+    <div class="chart-box">
+      <div class="tradingview-widget-container tv-chart">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript"
+                src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+                async>
+        {
+          "symbol": "TVC:USOIL",
+          "interval": "5",
+          "timezone": "Asia/Seoul",
+          "theme": "dark",
+          "style": "3",
+          "locale": "kr",
+          "hide_top_toolbar": false,
+          "hide_legend": false,
+          "allow_symbol_change": false,
+          "save_image": false,
+          "details": false,
+          "calendar": false,
+          "support_host": "https://www.tradingview.com",
+          "autosize": true
+        }
+        </script>
+      </div>
     </div>
   </div>
 
-  <!-- 미국채 큰 차트 (Yahoo JSON 선그래프) -->
+  <!-- 미국채 큰 차트 -->
   <div class="card">
     <div class="card-title">미국채 10년물 (30분 기준)</div>
-    <canvas id="bondChart"></canvas>
+    <div class="chart-box">
+      <canvas id="bondChart"></canvas>
+    </div>
   </div>
+
 </div>
 
 <script>
@@ -312,7 +329,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     else elBondChgLine.classList.add("neu");
   }
 
-  function buildLineChart(ctx, labels, data, color, heightMode) {
+  function buildSpark(ctx, labels, data, color) {
     return new Chart(ctx, {
       type: "line",
       data: {
@@ -351,11 +368,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!isFinite(price)) throw new Error("regularMarketPrice 파싱 실패");
 
-    // ✅ 기준시각
+    // 기준시각
     const t = meta?.regularMarketTime ? new Date(meta.regularMarketTime * 1000) : null;
     elBondTime.textContent = "기준시각: " + (t ? t.toLocaleString() : "-");
 
-    // ✅ WTI mini처럼: 큰 값 + 변화율/전일대비(괄호) 한 줄
+    // 요약(TradingView mini처럼)
     elBondPrice.textContent = price.toFixed(2) + "%";
 
     if (isFinite(prev) && prev !== 0) {
@@ -369,7 +386,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       elBondChgLine.textContent = "-";
     }
 
-    // ===== 데이터(공통) =====
+    // 데이터
     const ts = r0?.timestamp || [];
     const close = r0?.indicators?.quote?.[0]?.close || [];
 
@@ -379,20 +396,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     const data = close.map(x => (x == null ? null : Number(x)));
 
-    // ✅ 미국채 요약 미니차트(TradingView mini 느낌)
+    // 요약 미니차트
     const miniCtx = document.getElementById("bondMiniChart").getContext("2d");
     if (bondMiniChartInstance) bondMiniChartInstance.destroy();
 
-    // 색상은 변화 방향에 맞춰 (양수=초록, 음수=빨강, 그 외=청록 기본)
     let miniColor = getComputedStyle(document.documentElement).getPropertyValue("--linePos").trim() || "#00c2a8";
     if (isFinite(prev) && prev !== 0) {
       const chg = price - prev;
       if (chg < 0) miniColor = getComputedStyle(document.documentElement).getPropertyValue("--lineNeg").trim() || "#ff5b5b";
     }
 
-    bondMiniChartInstance = buildLineChart(miniCtx, labels, data, miniColor);
+    bondMiniChartInstance = buildSpark(miniCtx, labels, data, miniColor);
 
-    // ✅ 미국채 큰 차트(기존 유지)
+    // 큰 차트
     const bigCtx = document.getElementById("bondChart").getContext("2d");
     if (bondChartInstance) bondChartInstance.destroy();
 
