@@ -9,6 +9,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
+    :root{
+      --chartH: 360px; /* ✅ 세 차트(환율/유가/미국채) 길이(높이) 완전 통일 */
+    }
+
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
@@ -34,7 +38,7 @@
       line-height: 1.4;
     }
 
-    /* ✅ 카드 공통 규격(요약/차트/미국채 모두 동일) */
+    /* ✅ 카드 공통 규격(요약/차트 모두 동일) */
     .card {
       background: linear-gradient(180deg, #1a2233, #141b29);
       border-radius: 14px;
@@ -49,10 +53,22 @@
       color: #c8d2e1;
       margin-bottom: 10px;
       font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag {
+      font-size: 11px;
+      color: #9aa4b2;
+      border: 1px solid rgba(154,164,178,0.35);
+      padding: 2px 8px;
+      border-radius: 999px;
+      line-height: 1.6;
     }
 
     /* =========================
-       A) 요약 카드 영역 (공통)
+       A) 요약 카드 영역
        ========================= */
     .summary-row {
       display: flex;
@@ -84,39 +100,22 @@
       margin-top: 6px;
     }
 
-    .metric .delta {
-      text-align: right;
-      min-width: 140px;
-    }
-
-    .delta .chg {
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .delta .pct {
-      font-size: 12px;
-      color: #9aa4b2;
-      margin-top: 4px;
-    }
-
     /* =========================
        TradingView 위젯 높이 통일
        ========================= */
-    /* ✅ 요약(미니) 위젯: 카드 안에서 안정적으로 보이도록 높이 고정 */
     .tv-mini {
       height: 140px;
     }
 
-    /* ✅ 환율/유가 차트: 미국채와 완전 동일 크기 */
+    /* ✅ 환율/유가 차트: 미국채와 동일 길이(높이) */
     .tv-chart {
-      height: 360px;
+      height: var(--chartH);
     }
 
-    /* ✅ 미국채 차트 캔버스: 동일 높이 */
+    /* ✅ 미국채 차트 캔버스: 동일 길이(높이) */
     #bondChart {
       width: 100% !important;
-      height: 360px !important;
+      height: var(--chartH) !important;
       display: block;
     }
 
@@ -138,7 +137,7 @@
   </div>
 
   <!-- =========================
-       A) 요약 카드 (환율/유가: 트레이딩뷰 숫자, 미국채: Yahoo JSON)
+       A) 요약 카드
        ========================= -->
 
   <!-- 환율 요약 -->
@@ -164,7 +163,7 @@
     </div>
   </div>
 
-  <!-- 유가 요약 (✅ 팝업 방지: TVC:USOIL) -->
+  <!-- 유가 요약 -->
   <div class="card">
     <div class="card-title">WTI 유가</div>
     <div class="tradingview-widget-container tv-mini">
@@ -187,20 +186,22 @@
     </div>
   </div>
 
-  <!-- 미국채 10Y 요약 (Yahoo JSON) -->
+  <!-- ✅ 미국채 10Y 요약 (30분 기준 태그 + 한 줄 표기) -->
   <div class="card">
-    <div class="card-title">미국채 10년물 수익률 (10Y)</div>
+    <div class="card-title">
+      미국채 10년물 수익률 (10Y)
+      <span class="tag">30분 기준</span>
+    </div>
 
     <div class="summary-row">
       <div class="metric">
         <div>
           <div class="name">현재가</div>
+
+          <!-- ✅ 4.82% -0.72% (-0.04) 형태로 출력 -->
           <div class="value" id="bond10y">-</div>
+
           <div class="sub" id="bondTime">기준시각: -</div>
-        </div>
-        <div class="delta">
-          <div class="chg" id="bondChg">-</div>
-          <div class="pct" id="bondPct">-</div>
         </div>
       </div>
       <div class="err" id="bondErr"></div>
@@ -208,10 +209,10 @@
   </div>
 
   <!-- =========================
-       B) 차트 (환율/유가: 트레이딩뷰 / 미국채: Chart.js)
+       B) 차트 (길이/높이 완전 통일)
        ========================= -->
 
-  <!-- 환율 차트 (✅ 360px로 통일) -->
+  <!-- 환율 차트 -->
   <div class="card">
     <div class="card-title">USD/KRW 환율 차트 (REAL-TIME)</div>
     <div class="tradingview-widget-container tv-chart">
@@ -239,7 +240,7 @@
     </div>
   </div>
 
-  <!-- 유가 차트 (✅ 360px로 통일 / ✅ 팝업 방지: TVC:USOIL) -->
+  <!-- 유가 차트 -->
   <div class="card">
     <div class="card-title">WTI 유가 차트 (REAL-TIME)</div>
     <div class="tradingview-widget-container tv-chart">
@@ -267,7 +268,7 @@
     </div>
   </div>
 
-  <!-- 미국채 차트 (360px) -->
+  <!-- 미국채 차트 -->
   <div class="card">
     <div class="card-title">미국채 10년물 (30분 기준)</div>
     <canvas id="bondChart"></canvas>
@@ -284,16 +285,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     bondErr.textContent = msg;
   }
 
-  function fmtSigned(n, digits = 2) {
+  function signed(n, digits = 2) {
     const v = Number(n);
     if (!isFinite(v)) return "-";
     return (v >= 0 ? "+" : "") + v.toFixed(digits);
-  }
-
-  function fmtSignedPct(n, digits = 2) {
-    const v = Number(n);
-    if (!isFinite(v)) return "-";
-    return (v >= 0 ? "+" : "") + v.toFixed(digits) + " %";
   }
 
   try {
@@ -309,24 +304,27 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!isFinite(price)) throw new Error("regularMarketPrice 파싱 실패");
 
-    // 요약 표시
-    document.getElementById("bond10y").innerText = price.toFixed(2) + " %";
+    const priceStr = price.toFixed(2) + "%";
 
+    // ✅ 기준시각
     const t = meta?.regularMarketTime ? new Date(meta.regularMarketTime * 1000) : null;
     document.getElementById("bondTime").innerText =
       "기준시각: " + (t ? t.toLocaleString() : "-");
 
+    // ✅ 한 줄 표기: 4.82% -0.72% (-0.04)
     if (isFinite(prev) && prev !== 0) {
-      const chg = price - prev;
-      const pct = (chg / prev) * 100;
-      document.getElementById("bondChg").innerText = "전일대비 " + fmtSigned(chg, 2);
-      document.getElementById("bondPct").innerText = "변화율 " + fmtSignedPct(pct, 2);
+      const chg = price - prev;              // 절대변화(퍼센트포인트)
+      const pct = (chg / prev) * 100;        // 변화율(%)
+
+      const pctStr = signed(pct, 2) + "%";
+      const chgStr = signed(chg, 2);
+
+      document.getElementById("bond10y").innerText = `${priceStr} ${pctStr} (${chgStr})`;
     } else {
-      document.getElementById("bondChg").innerText = "전일대비 -";
-      document.getElementById("bondPct").innerText = "변화율 -";
+      document.getElementById("bond10y").innerText = priceStr;
     }
 
-    // 차트 데이터
+    // ===== 차트 =====
     const ts = r0?.timestamp || [];
     const close = r0?.indicators?.quote?.[0]?.close || [];
 
@@ -334,6 +332,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const d = new Date(x * 1000);
       return d.toLocaleTimeString();
     });
+
     const data = close.map(x => (x == null ? null : Number(x)));
 
     const ctx = document.getElementById("bondChart").getContext("2d");
