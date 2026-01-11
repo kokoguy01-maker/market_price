@@ -1,135 +1,145 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>시장 현황 요약</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>시장 현황 요약</title>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
-      background: #fff;
-    }
-    .wrap {
-      max-width: 900px;
-      margin: auto;
-      padding: 16px;
-    }
-    h1 { font-size: 20px; }
-    .muted { font-size: 12px; color: #666; margin-bottom: 12px; }
-
-    .box {
-      border: 1px solid #e5e5e5;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-    .k { font-size: 13px; color: #666; }
-    .v { font-size: 22px; font-weight: 700; margin-top: 4px; }
-    canvas { margin-top: 10px; height: 220px !important; }
-  </style>
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+  background: #ffffff;
+}
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+h1 {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+.muted {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 14px;
+}
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.box {
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 14px;
+}
+.k {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
+.v {
+  font-size: 22px;
+  font-weight: 700;
+}
+.ts {
+  font-size: 11px;
+  margin-top: 6px;
+  color: #888;
+}
+iframe {
+  width: 100%;
+  height: 360px;
+  border: none;
+}
+</style>
 </head>
 
 <body>
 <div class="wrap">
   <h1>시장 현황 요약</h1>
-  <div class="muted">환율·유가: 준실시간 | 미국채 10Y: 최근 기준</div>
-
-  <div class="box">
-    <div class="k">USD/KRW 환율 ● LIVE</div>
-    <div class="v" id="fx_val">-</div>
-    <canvas id="fx_chart"></canvas>
+  <div class="muted">
+    미국채 10Y: 기준 시각 | 환율·유가: 실시간 (TradingView)
   </div>
 
-  <div class="box">
-    <div class="k">미국채 10년물 수익률</div>
-    <div class="v" id="us10y_val">-</div>
-  </div>
+  <div class="summary">
 
-  <div class="box">
-    <div class="k">WTI 유가 ● LIVE</div>
-    <div class="v" id="wti_val">-</div>
-    <canvas id="wti_chart"></canvas>
+    <!-- USD/KRW 환율 (TradingView 실시간) -->
+    <div class="box">
+      <div class="k">USD/KRW 환율 ● REAL-TIME</div>
+      <iframe
+        src="https://s.tradingview.com/widgetembed/?symbol=FX_IDC%3AUSDKRW&interval=1&theme=light&style=1&locale=kr">
+      </iframe>
+    </div>
+
+    <!-- 미국채 10Y (기존 유지) -->
+    <div class="box">
+      <div class="k">미국채 10년물 수익률 (10Y)</div>
+      <div class="v" id="v_10y">-</div>
+      <div class="ts" id="t_10y"></div>
+      <canvas id="chart10y" height="240"></canvas>
+    </div>
+
+    <!-- WTI 유가 (TradingView 실시간) -->
+    <div class="box">
+      <div class="k">WTI 유가 ● REAL-TIME</div>
+      <iframe
+        src="https://s.tradingview.com/widgetembed/?symbol=NYMEX%3ACL1!&interval=1&theme=light&style=1&locale=kr">
+      </iframe>
+    </div>
+
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 async function loadJSON(url) {
   const res = await fetch(url + '?t=' + Date.now());
+  if (!res.ok) throw new Error('Fetch failed');
   return res.json();
 }
 
-let fxChart, wtiChart;
+(async () => {
+  try {
+    // 미국채 10Y JSON (기존 유지)
+    const us10y = await loadJSON('./data/us10y.json');
+    const meta = us10y.chart.result[0].meta;
+    const ts = us10y.chart.result[0].timestamp;
+    const values = us10y.chart.result[0].indicators.quote[0].close;
 
-function drawChart(ctx, labels, data) {
-  return new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data,
-        borderColor: '#2563eb',
-        tension: 0.25,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      animation: false,
-      plugins: { legend: { display: false } },
-      scales: { x: { display: false }, y: { display: true } }
-    }
-  });
-}
+    document.getElementById('v_10y').innerText =
+      meta.regularMarketPrice.toFixed(2) + ' %';
+    document.getElementById('t_10y').innerText =
+      '기준 시각: ' + new Date(meta.regularMarketTime * 1000).toLocaleString();
 
-async function refreshData() {
-  const fx = await loadJSON('./data/usdkrw.json');
-  const wti = await loadJSON('./data/wti.json');
-  const us10y = await loadJSON('./data/us10y.json');
+    // 차트 유지
+    const labels = ts.map(t => new Date(t * 1000).toLocaleTimeString());
+    new Chart(document.getElementById('chart10y'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          borderColor: '#333',
+          borderWidth: 1,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false }},
+        scales: { x: { display: false } }
+      }
+    });
 
-  const fxMeta = fx.chart.result[0].meta;
-  const wtiMeta = wti.chart.result[0].meta;
-
-  document.getElementById('fx_val').innerText =
-    fxMeta.regularMarketPrice.toLocaleString() + ' 원';
-
-  document.getElementById('wti_val').innerText =
-    '$ ' + wtiMeta.regularMarketPrice.toFixed(2);
-
-  document.getElementById('us10y_val').innerText =
-    us10y.chart.result[0].meta.regularMarketPrice.toFixed(2) + ' %';
-
-  const fxPrices = fx.chart.result[0].indicators.quote[0].close.slice(-60);
-  const wtiPrices = wti.chart.result[0].indicators.quote[0].close.slice(-60);
-
-  if (!fxChart) {
-    fxChart = drawChart(
-      document.getElementById('fx_chart'),
-      fxPrices.map((_, i) => i),
-      fxPrices
-    );
-  } else {
-    fxChart.data.datasets[0].data = fxPrices;
-    fxChart.update();
+  } catch (e) {
+    console.error(e);
   }
-
-  if (!wtiChart) {
-    wtiChart = drawChart(
-      document.getElementById('wti_chart'),
-      wtiPrices.map((_, i) => i),
-      wtiPrices
-    );
-  } else {
-    wtiChart.data.datasets[0].data = wtiPrices;
-    wtiChart.update();
-  }
-}
-
-refreshData();
-setInterval(refreshData, 5000); // 5초 UI 갱신
+})();
 </script>
+
 </body>
 </html>
