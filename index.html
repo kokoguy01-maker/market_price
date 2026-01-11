@@ -5,12 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>시장 현황 요약</title>
 
-  <!-- Chart.js (미국채 차트용) -->
+  <!-- Chart.js (미국채 차트 + 미국채 요약 미니차트) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     :root{
-      --chartH: 360px; /* ✅ 세 차트(환율/유가/미국채) 길이(높이) 완전 통일 */
+      --chartH: 360px;   /* 큰 차트(환율/유가/미국채) 통일 */
+      --miniH: 140px;    /* 요약 카드 높이(환율/유가/미국채) 통일 */
+      --linePos: #00c2a8;
+      --lineNeg: #ff5b5b;
+      --muted: #9aa4b2;
+      --title: #c8d2e1;
     }
 
     body {
@@ -33,12 +38,12 @@
 
     .muted {
       font-size: 12px;
-      color: #9aa4b2;
+      color: var(--muted);
       margin-bottom: 20px;
       line-height: 1.4;
     }
 
-    /* ✅ 카드 공통 규격(요약/차트 모두 동일) */
+    /* 카드 공통 */
     .card {
       background: linear-gradient(180deg, #1a2233, #141b29);
       border-radius: 14px;
@@ -47,10 +52,9 @@
       overflow: hidden;
     }
 
-    /* ✅ 제목 공통 규격 */
     .card-title {
       font-size: 13px;
-      color: #c8d2e1;
+      color: var(--title);
       margin-bottom: 10px;
       font-weight: 700;
       display: flex;
@@ -60,69 +64,76 @@
 
     .tag {
       font-size: 11px;
-      color: #9aa4b2;
+      color: var(--muted);
       border: 1px solid rgba(154,164,178,0.35);
       padding: 2px 8px;
       border-radius: 999px;
       line-height: 1.6;
+      font-weight: 600;
     }
 
-    /* =========================
-       A) 요약 카드 영역
-       ========================= */
-    .summary-row {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    /* TradingView 요약 위젯 높이 통일 */
+    .tv-mini { height: var(--miniH); }
+    .tv-chart { height: var(--chartH); }
 
-    .metric {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 12px;
-    }
-
-    .metric .name {
-      font-size: 12px;
-      color: #9aa4b2;
-    }
-
-    .metric .value {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.3px;
-    }
-
-    .metric .sub {
-      font-size: 12px;
-      color: #9aa4b2;
-      margin-top: 6px;
-    }
-
-    /* =========================
-       TradingView 위젯 높이 통일
-       ========================= */
-    .tv-mini {
-      height: 140px;
-    }
-
-    /* ✅ 환율/유가 차트: 미국채와 동일 길이(높이) */
-    .tv-chart {
-      height: var(--chartH);
-    }
-
-    /* ✅ 미국채 차트 캔버스: 동일 길이(높이) */
+    /* 큰 차트(미국채) */
     #bondChart {
       width: 100% !important;
       height: var(--chartH) !important;
       display: block;
     }
 
+    /* =========================
+       미국채 요약(TradingView mini 스타일 모사)
+       ========================= */
+    .bond-mini {
+      height: var(--miniH);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bond-mini-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .bond-mini-price {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+
+    .bond-mini-chg {
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .bond-mini-chg.pos { color: var(--linePos); }
+    .bond-mini-chg.neg { color: var(--lineNeg); }
+    .bond-mini-chg.neu { color: var(--muted); }
+
+    .bond-mini-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: -2px;
+    }
+
+    /* 미국채 요약 미니차트 */
+    #bondMiniChart {
+      width: 100% !important;
+      height: 70px !important;
+      display: block;
+      margin-top: 2px;
+    }
+
     .err {
       font-size: 12px;
       color: #ffb4b4;
-      padding: 10px 0 0;
+      padding-top: 8px;
       display: none;
       white-space: pre-wrap;
     }
@@ -140,7 +151,7 @@
        A) 요약 카드
        ========================= -->
 
-  <!-- 환율 요약 -->
+  <!-- 환율 요약 (TradingView mini) -->
   <div class="card">
     <div class="card-title">USD/KRW 환율</div>
     <div class="tradingview-widget-container tv-mini">
@@ -163,7 +174,7 @@
     </div>
   </div>
 
-  <!-- 유가 요약 -->
+  <!-- 유가 요약 (TradingView mini) -->
   <div class="card">
     <div class="card-title">WTI 유가</div>
     <div class="tradingview-widget-container tv-mini">
@@ -186,30 +197,27 @@
     </div>
   </div>
 
-  <!-- ✅ 미국채 10Y 요약 (30분 기준 태그 + 한 줄 표기) -->
+  <!-- ✅ 미국채 요약 (WTI mini와 동일한 “느낌”으로: 큰 값 + 변화 + 미니 선그래프) -->
   <div class="card">
     <div class="card-title">
-      미국채 10년물 수익률 (10Y)
-      <span class="tag">30분 기준</span>
+      미국채 10년물 수익률 (10Y) <span class="tag">30분 기준</span>
     </div>
 
-    <div class="summary-row">
-      <div class="metric">
-        <div>
-          <div class="name">현재가</div>
-
-          <!-- ✅ 4.82% -0.72% (-0.04) 형태로 출력 -->
-          <div class="value" id="bond10y">-</div>
-
-          <div class="sub" id="bondTime">기준시각: -</div>
-        </div>
+    <div class="bond-mini">
+      <div class="bond-mini-top">
+        <div class="bond-mini-price" id="bondPrice">-</div>
+        <div class="bond-mini-chg neu" id="bondChgLine">-</div>
       </div>
+
+      <canvas id="bondMiniChart"></canvas>
+
+      <div class="bond-mini-sub" id="bondTime">기준시각: -</div>
       <div class="err" id="bondErr"></div>
     </div>
   </div>
 
   <!-- =========================
-       B) 차트 (길이/높이 완전 통일)
+       B) 큰 차트 (길이/높이 통일)
        ========================= -->
 
   <!-- 환율 차트 -->
@@ -268,17 +276,22 @@
     </div>
   </div>
 
-  <!-- 미국채 차트 -->
+  <!-- 미국채 큰 차트 (Yahoo JSON 선그래프) -->
   <div class="card">
     <div class="card-title">미국채 10년물 (30분 기준)</div>
     <canvas id="bondChart"></canvas>
   </div>
-
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
   const bondErr = document.getElementById("bondErr");
+  const elBondPrice = document.getElementById("bondPrice");
+  const elBondChgLine = document.getElementById("bondChgLine");
+  const elBondTime = document.getElementById("bondTime");
+
+  let bondMiniChartInstance = null;
+  let bondChartInstance = null;
 
   function showBondErr(msg) {
     bondErr.style.display = "block";
@@ -289,6 +302,40 @@ document.addEventListener("DOMContentLoaded", async () => {
     const v = Number(n);
     if (!isFinite(v)) return "-";
     return (v >= 0 ? "+" : "") + v.toFixed(digits);
+  }
+
+  function setChgClass(pct) {
+    elBondChgLine.classList.remove("pos", "neg", "neu");
+    if (!isFinite(pct)) elBondChgLine.classList.add("neu");
+    else if (pct > 0) elBondChgLine.classList.add("pos");
+    else if (pct < 0) elBondChgLine.classList.add("neg");
+    else elBondChgLine.classList.add("neu");
+  }
+
+  function buildLineChart(ctx, labels, data, color, heightMode) {
+    return new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          data,
+          borderColor: color,
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.25,
+          spanGaps: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: {
+          x: { display: false, grid: { display: false } },
+          y: { display: false, grid: { display: false } }
+        }
+      }
+    });
   }
 
   try {
@@ -304,27 +351,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!isFinite(price)) throw new Error("regularMarketPrice 파싱 실패");
 
-    const priceStr = price.toFixed(2) + "%";
-
     // ✅ 기준시각
     const t = meta?.regularMarketTime ? new Date(meta.regularMarketTime * 1000) : null;
-    document.getElementById("bondTime").innerText =
-      "기준시각: " + (t ? t.toLocaleString() : "-");
+    elBondTime.textContent = "기준시각: " + (t ? t.toLocaleString() : "-");
 
-    // ✅ 한 줄 표기: 4.82% -0.72% (-0.04)
+    // ✅ WTI mini처럼: 큰 값 + 변화율/전일대비(괄호) 한 줄
+    elBondPrice.textContent = price.toFixed(2) + "%";
+
     if (isFinite(prev) && prev !== 0) {
-      const chg = price - prev;              // 절대변화(퍼센트포인트)
-      const pct = (chg / prev) * 100;        // 변화율(%)
+      const chg = price - prev;        // 절대 변화(퍼센트포인트)
+      const pct = (chg / prev) * 100;  // 변화율(%)
 
-      const pctStr = signed(pct, 2) + "%";
-      const chgStr = signed(chg, 2);
-
-      document.getElementById("bond10y").innerText = `${priceStr} ${pctStr} (${chgStr})`;
+      setChgClass(pct);
+      elBondChgLine.textContent = `${signed(pct, 2)}% (${signed(chg, 2)})`;
     } else {
-      document.getElementById("bond10y").innerText = priceStr;
+      setChgClass(NaN);
+      elBondChgLine.textContent = "-";
     }
 
-    // ===== 차트 =====
+    // ===== 데이터(공통) =====
     const ts = r0?.timestamp || [];
     const close = r0?.indicators?.quote?.[0]?.close || [];
 
@@ -332,11 +377,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       const d = new Date(x * 1000);
       return d.toLocaleTimeString();
     });
-
     const data = close.map(x => (x == null ? null : Number(x)));
 
-    const ctx = document.getElementById("bondChart").getContext("2d");
-    new Chart(ctx, {
+    // ✅ 미국채 요약 미니차트(TradingView mini 느낌)
+    const miniCtx = document.getElementById("bondMiniChart").getContext("2d");
+    if (bondMiniChartInstance) bondMiniChartInstance.destroy();
+
+    // 색상은 변화 방향에 맞춰 (양수=초록, 음수=빨강, 그 외=청록 기본)
+    let miniColor = getComputedStyle(document.documentElement).getPropertyValue("--linePos").trim() || "#00c2a8";
+    if (isFinite(prev) && prev !== 0) {
+      const chg = price - prev;
+      if (chg < 0) miniColor = getComputedStyle(document.documentElement).getPropertyValue("--lineNeg").trim() || "#ff5b5b";
+    }
+
+    bondMiniChartInstance = buildLineChart(miniCtx, labels, data, miniColor);
+
+    // ✅ 미국채 큰 차트(기존 유지)
+    const bigCtx = document.getElementById("bondChart").getContext("2d");
+    if (bondChartInstance) bondChartInstance.destroy();
+
+    bondChartInstance = new Chart(bigCtx, {
       type: "line",
       data: {
         labels,
@@ -345,6 +405,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           borderColor: "#8aa4ff",
           borderWidth: 2,
           pointRadius: 0,
+          tension: 0.25,
           spanGaps: true
         }]
       },
