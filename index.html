@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>시장 현황 요약</title>
 
-  <!-- Chart.js (미국채 차트 + 미국채 요약 미니차트) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -79,7 +78,7 @@
     .chart-box {
       height: var(--chartH);
       border-radius: 12px;   /* 카드 내부에서도 모서리 통일감 */
-      overflow: hidden;       /* TV iframe / canvas가 밖으로 안나가게 */
+      overflow: hidden;        /* TV iframe / canvas가 밖으로 안나가게 */
     }
 
     /* TradingView 차트 컨테이너는 chart-box를 꽉 채움 */
@@ -157,11 +156,6 @@
     환율·유가: 실시간(TradingView→트레이딩뷰) / 미국채 10Y: 30분 기준(Yahoo Finance→야후 파이낸스)
   </div>
 
-  <!-- =========================
-       A) 요약 카드
-       ========================= -->
-
-  <!-- 환율 요약 (TradingView mini) -->
   <div class="card">
     <div class="card-title">USD/KRW 환율</div>
     <div class="tradingview-widget-container tv-mini">
@@ -184,7 +178,28 @@
     </div>
   </div>
 
-  <!-- 유가 요약 (TradingView mini) -->
+  <div class="card">
+    <div class="card-title">브렌트유 (Brent)</div>
+    <div class="tradingview-widget-container tv-mini">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript"
+              src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js"
+              async>
+      {
+        "symbol": "TVC:UKOIL",
+        "locale": "kr",
+        "dateRange": "1D",
+        "colorTheme": "dark",
+        "isTransparent": true,
+        "autosize": true,
+        "largeChartUrl": "",
+        "width": "100%",
+        "height": 140
+      }
+      </script>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-title">WTI 유가</div>
     <div class="tradingview-widget-container tv-mini">
@@ -207,7 +222,6 @@
     </div>
   </div>
 
-  <!-- 미국채 요약 (TV mini 스타일) -->
   <div class="card">
     <div class="card-title">
       미국채 10년물 수익률 (10Y) <span class="tag">30분 기준</span>
@@ -226,11 +240,6 @@
     </div>
   </div>
 
-  <!-- =========================
-       B) 차트 (세 개 모두 “chart-box”로 높이 통일)
-       ========================= -->
-
-  <!-- 환율 차트 -->
   <div class="card">
     <div class="card-title">USD/KRW 환율 차트 (REAL-TIME)</div>
     <div class="chart-box">
@@ -260,7 +269,35 @@
     </div>
   </div>
 
-  <!-- 유가 차트 -->
+  <div class="card">
+    <div class="card-title">브렌트유 차트 (REAL-TIME)</div>
+    <div class="chart-box">
+      <div class="tradingview-widget-container tv-chart">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript"
+                src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+                async>
+        {
+          "symbol": "TVC:UKOIL",
+          "interval": "5",
+          "timezone": "Asia/Seoul",
+          "theme": "dark",
+          "style": "3",
+          "locale": "kr",
+          "hide_top_toolbar": false,
+          "hide_legend": false,
+          "allow_symbol_change": false,
+          "save_image": false,
+          "details": false,
+          "calendar": false,
+          "support_host": "https://www.tradingview.com",
+          "autosize": true
+        }
+        </script>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-title">WTI 유가 차트 (REAL-TIME)</div>
     <div class="chart-box">
@@ -290,7 +327,6 @@
     </div>
   </div>
 
-  <!-- 미국채 큰 차트 -->
   <div class="card">
     <div class="card-title">미국채 10년물 (30분 기준)</div>
     <div class="chart-box">
