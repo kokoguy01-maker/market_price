@@ -9,8 +9,8 @@
 
   <style>
     :root{
-      --chartH: 360px;   /* ✅ 세 차트 “차트 박스” 높이 완전 통일 */
-      --miniH: 140px;    /* 요약 카드 높이(환율/유가/미국채) */
+      --chartH: 360px;
+      --miniH: 140px;
       --linePos: #00c2a8;
       --lineNeg: #ff5b5b;
       --muted: #9aa4b2;
@@ -42,7 +42,6 @@
       line-height: 1.4;
     }
 
-    /* 카드 공통 */
     .card {
       background: linear-gradient(180deg, #1a2233, #141b29);
       border-radius: 14px;
@@ -71,31 +70,24 @@
       font-weight: 600;
     }
 
-    /* ✅ 요약 위젯 높이 */
     .tv-mini { height: var(--miniH); }
 
-    /* ✅ 세 차트 “차트 박스”를 동일 규격으로 강제 */
     .chart-box {
       height: var(--chartH);
-      border-radius: 12px;   /* 카드 내부에서도 모서리 통일감 */
-      overflow: hidden;        /* TV iframe / canvas가 밖으로 안나가게 */
+      border-radius: 12px;
+      overflow: hidden;
     }
 
-    /* TradingView 차트 컨테이너는 chart-box를 꽉 채움 */
     .tv-chart {
       height: 100%;
     }
 
-    /* 미국채 캔버스도 chart-box를 꽉 채움 */
     #bondChart {
       width: 100% !important;
       height: 100% !important;
       display: block;
     }
 
-    /* =========================
-       미국채 요약(TradingView mini 스타일 모사)
-       ========================= */
     .bond-mini {
       height: var(--miniH);
       display: flex;
@@ -179,14 +171,14 @@
   </div>
 
   <div class="card">
-    <div class="card-title">두바이유 (Dubai)</div>
+    <div class="card-title">브렌트유 (Brent)</div>
     <div class="tradingview-widget-container tv-mini">
       <div class="tradingview-widget-container__widget"></div>
       <script type="text/javascript"
               src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js"
               async>
       {
-        "symbol": "NYMEX:DCB1!",
+        "symbol": "TVC:UKOIL",
         "locale": "kr",
         "dateRange": "1D",
         "colorTheme": "dark",
@@ -270,7 +262,7 @@
   </div>
 
   <div class="card">
-    <div class="card-title">두바이유 차트 (REAL-TIME)</div>
+    <div class="card-title">브렌트유 차트 (REAL-TIME)</div>
     <div class="chart-box">
       <div class="tradingview-widget-container tv-chart">
         <div class="tradingview-widget-container__widget"></div>
@@ -278,7 +270,7 @@
                 src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
                 async>
         {
-          "symbol": "NYMEX:DCB1!",
+          "symbol": "TVC:UKOIL",
           "interval": "5",
           "timezone": "Asia/Seoul",
           "theme": "dark",
@@ -412,8 +404,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     elBondPrice.textContent = price.toFixed(2) + "%";
 
     if (isFinite(prev) && prev !== 0) {
-      const chg = price - prev;        // 절대 변화(퍼센트포인트)
-      const pct = (chg / prev) * 100;  // 변화율(%)
+      const chg = price - prev;        
+      const pct = (chg / prev) * 100;  
 
       setChgClass(pct);
       elBondChgLine.textContent = `${signed(pct, 2)}% (${signed(chg, 2)})`;
